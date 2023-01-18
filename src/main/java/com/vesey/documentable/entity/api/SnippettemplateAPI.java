@@ -1,9 +1,7 @@
 package com.vesey.documentable.entity.api;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -115,26 +113,7 @@ public class SnippettemplateAPI {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
-		Map<String, Object> requestMap = new HashMap<>();
-		requestMap.put("documenttemplateUuid", documenttemplateUuid);
-
-		String sql = Snippettemplate.getListSQL(Snippettemplate.class, requestMap);
-		Map<String, Object> params = Snippettemplate.getListParams(requestMap, user);
-
-		Integer startPosition = null;
-		Integer maxResults = null;
-
-		Integer page = (Integer) requestMap.get("page");
-		Integer rowsPerPage = (Integer) requestMap.get("rowsPerPage");
-
-		if (page != null && rowsPerPage != null) {
-			maxResults = rowsPerPage;
-			startPosition = page * rowsPerPage;
-		}
-		String result;
-		// log.info("listSnippettemplates: Getting entity list...");
-		List<Snippettemplate> instances = dbFacade.getEntityList(Snippettemplate.class, sql, params, false, startPosition, maxResults);
-		// log.info("listSnippettemplates: Building DTO response...");
+		List<Snippettemplate> instances = Snippettemplate.getForDocumenttemplate(documenttemplateUuid, dbFacade, false);
 
 		List<SnippettemplateDTO> dtos = new ArrayList<>();
 		if (Utils.isNotEmpty(instances)) {
@@ -142,7 +121,7 @@ public class SnippettemplateAPI {
 				dtos.add(mapper.getDTOFromSnippettemplate(thisSnippettemplate, new CycleAvoidingMappingContext(user)));
 			}
 		}
-		result = Utils.convertToJSON(dtos);
+		String result = Utils.convertToJSON(dtos);
 		Response response = Response.ok(result).build();
 		log.info("listSnippettemplates: End");
 		return response;
@@ -195,26 +174,7 @@ public class SnippettemplateAPI {
 			return Response.status(Status.FORBIDDEN).entity("Documenttemplate does not belong to this organistation.").build();
 		}
 
-		Map<String, Object> requestMap = new HashMap<>();
-		requestMap.put("listSnippettemplatesForDocumenttemplate", documenttemplateUuid);
-
-		String sql = Snippettemplate.getAllListSQL(Snippettemplate.class, requestMap);
-		Map<String, Object> params = Snippettemplate.getListParams(requestMap, user);
-
-		Integer startPosition = null;
-		Integer maxResults = null;
-
-		Integer page = (Integer) requestMap.get("page");
-		Integer rowsPerPage = (Integer) requestMap.get("rowsPerPage");
-
-		if (page != null && rowsPerPage != null) {
-			maxResults = rowsPerPage;
-			startPosition = page * rowsPerPage;
-		}
-		String result;
-		// log.info("listSnippettemplates: Getting entity list...");
-		List<Snippettemplate> instances = dbFacade.getEntityList(Snippettemplate.class, sql, params, false, startPosition, maxResults);
-		// log.info("listSnippettemplates: Building DTO response...");
+		List<Snippettemplate> instances = Snippettemplate.getForDocumenttemplate(documenttemplateUuid, dbFacade, true);
 
 		List<SnippettemplateDTO> dtos = new ArrayList<>();
 		if (Utils.isNotEmpty(instances)) {
@@ -222,7 +182,7 @@ public class SnippettemplateAPI {
 				dtos.add(mapper.getDTOFromSnippettemplate(thisSnippettemplate, new CycleAvoidingMappingContext(user)));
 			}
 		}
-		result = Utils.convertToJSON(dtos);
+		String result = Utils.convertToJSON(dtos);
 		Response response = Response.ok(result).build();
 		log.info("listSnippettemplates: End");
 		return response;
@@ -358,17 +318,17 @@ public class SnippettemplateAPI {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Secured
-	@Path("/swap")
+	@Path("/child")
 	@SecurityRequirement(name = "jwt")
-	@Operation(summary = "Swap Snippettemplate", description = "Swap Snippet templates", tags = {
+	@Operation(summary = "Drop Snippet template on another Snippet template", description = "Called to make a snippet templae a child of another snippet template", tags = {
 			"Snippettemplate" }, security = @SecurityRequirement(name = "jwt"), responses = {
 					@ApiResponse(description = "The updated Snippettemplate", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SnippettemplateDTO.class))),
 					@ApiResponse(responseCode = "304", description = "Snippet templates not modified (updated)"),
 					@ApiResponse(responseCode = "401", description = "Unauthorized (Token Expired)"),
 					@ApiResponse(responseCode = "403", description = "Forbidden"),
 					@ApiResponse(responseCode = "409", description = "Snippet templates have been modified by another user") })
-	public Response swapSnippettemplates(@Context HttpHeaders headers, final SnippettemplateSwapDTO dto) throws ConflictException {
-		log.info("swapSnippettemplates: Start");
+	public Response addChild(@Context HttpHeaders headers, final SnippettemplateSwapDTO dto) throws ConflictException {
+		log.info("addChild: Start");
 
 		Users user = null;
 		if (Utils.isNotEmpty(headers.getRequestHeader(HttpHeaders.AUTHORIZATION))) {
@@ -376,39 +336,99 @@ public class SnippettemplateAPI {
 			user = authFacade.getUserFromToken(authorizationHeader, dbFacade);
 		}
 		if (user == null) {
-			log.warn("swapSnippettemplates: User not found");
+			log.warn("addChild: User not found");
 			return Response.status(Status.FORBIDDEN).entity(" User not found").build();
 		}
 
 		Snippettemplate sourceSnippettemplateInstance = Snippettemplate.getByUuid(dbFacade, dto.getSourceUuid());
 		if (sourceSnippettemplateInstance == null) {
-			log.warn("swapSnippettemplates: No Snippettemplate found for UUID : " + dto.getSourceUuid());
+			log.warn("addChild: No Snippettemplate found for UUID : " + dto.getSourceUuid());
 			return Response.status(Status.BAD_REQUEST).entity(" No Snippettemplate found for UUID : " + dto.getSourceUuid()).build();
 		}
 
 		Snippettemplate destinationSnippettemplateInstance = Snippettemplate.getByUuid(dbFacade, dto.getDestinationUuid());
 		if (destinationSnippettemplateInstance == null) {
-			log.warn("swapSnippettemplates: No Snippettemplate found for UUID : " + dto.getDestinationUuid());
+			log.warn("addChild: No Snippettemplate found for UUID : " + dto.getDestinationUuid());
 			return Response.status(Status.BAD_REQUEST).entity(" No Snippettemplate found for UUID : " + dto.getDestinationUuid()).build();
 		}
 
 		// check authorization
 		Documenttemplate documenttemplateInstance = Documenttemplate.findForSnippettemplate(dbFacade, sourceSnippettemplateInstance);
 		if (documenttemplateInstance == null) {
-			log.warn("swapSnippettemplates: No Document template found for Snippettemplate UUID : " + dto.getSourceUuid());
+			log.warn("addChild: No Document template found for Snippettemplate UUID : " + dto.getSourceUuid());
 			return Response.status(Status.BAD_REQUEST).entity("No Document template found for Snippettemplate UUID : " + dto.getSourceUuid()).build();
 		}
 
 		documenttemplateInstance = Documenttemplate.findForSnippettemplate(dbFacade, destinationSnippettemplateInstance);
 		if (!documenttemplateInstance.getCreatedby().getOrganisation().equals(user.getOrganisation())) {
-			log.warn("swapSnippettemplates: Snippettemplate does not belong to this organistation.");
+			log.warn("addChild: Snippettemplate does not belong to this organistation.");
 			return Response.status(Status.FORBIDDEN).entity("No Document template found for Snippettemplate UUID : " + dto.getDestinationUuid()).build();
 		}
 
 		// OK to swap
 
-		Response response = restFacade.moveSnippettemplate(sourceSnippettemplateInstance, destinationSnippettemplateInstance, dto.getIndex());
-		log.info("swapSnippettemplates: End");
+		Response response = restFacade.addChild(sourceSnippettemplateInstance, destinationSnippettemplateInstance, dto.getIndex());
+		log.info("addChild: End");
+		return response;
+
+	}
+
+	@PUT
+	@Logged
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Secured
+	@Path("/sibling")
+	@SecurityRequirement(name = "jwt")
+	@Operation(summary = "Drop Snippet template on a divider", description = "Called to move a snippet template below another Snippet template)", tags = {
+			"Snippettemplate" }, security = @SecurityRequirement(name = "jwt"), responses = {
+					@ApiResponse(description = "The updated Snippettemplate", content = @Content(mediaType = "application/json", schema = @Schema(implementation = SnippettemplateDTO.class))),
+					@ApiResponse(responseCode = "304", description = "Snippet templates not modified (updated)"),
+					@ApiResponse(responseCode = "401", description = "Unauthorized (Token Expired)"),
+					@ApiResponse(responseCode = "403", description = "Forbidden"),
+					@ApiResponse(responseCode = "409", description = "Snippet templates have been modified by another user") })
+	public Response addSibling(@Context HttpHeaders headers, final SnippettemplateSwapDTO dto) throws ConflictException {
+		log.info("addSibling: Start");
+
+		Users user = null;
+		if (Utils.isNotEmpty(headers.getRequestHeader(HttpHeaders.AUTHORIZATION))) {
+			String authorizationHeader = headers.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
+			user = authFacade.getUserFromToken(authorizationHeader, dbFacade);
+		}
+		if (user == null) {
+			log.warn("addSibling: User not found");
+			return Response.status(Status.FORBIDDEN).entity(" User not found").build();
+		}
+
+		Snippettemplate sourceSnippettemplateInstance = Snippettemplate.getByUuid(dbFacade, dto.getSourceUuid());
+		if (sourceSnippettemplateInstance == null) {
+			log.warn("addSibling: No Snippettemplate found for UUID : " + dto.getSourceUuid());
+			return Response.status(Status.BAD_REQUEST).entity(" No Snippettemplate found for UUID : " + dto.getSourceUuid()).build();
+		}
+
+		Snippettemplate destinationSnippettemplateInstance = Snippettemplate.getByUuid(dbFacade, dto.getDestinationUuid());
+		if (destinationSnippettemplateInstance == null) {
+			log.warn("addSibling: No Snippettemplate found for UUID : " + dto.getDestinationUuid());
+			return Response.status(Status.BAD_REQUEST).entity(" No Snippettemplate found for UUID : " + dto.getDestinationUuid()).build();
+		}
+
+		// check authorization
+		Documenttemplate documenttemplateInstance = Documenttemplate.findForSnippettemplate(dbFacade, sourceSnippettemplateInstance);
+		if (documenttemplateInstance == null) {
+			log.warn("addSibling: No Document template found for Snippettemplate UUID : " + dto.getSourceUuid());
+			return Response.status(Status.BAD_REQUEST).entity("No Document template found for Snippettemplate UUID : " + dto.getSourceUuid()).build();
+		}
+
+		documenttemplateInstance = Documenttemplate.findForSnippettemplate(dbFacade, destinationSnippettemplateInstance);
+		if (!documenttemplateInstance.getCreatedby().getOrganisation().equals(user.getOrganisation())) {
+			log.warn("addSibling: Snippettemplate does not belong to this organistation.");
+			return Response.status(Status.FORBIDDEN).entity("No Document template found for Snippettemplate UUID : " + dto.getDestinationUuid()).build();
+		}
+
+		// OK to swap
+
+		Response response = restFacade.addSibling(sourceSnippettemplateInstance, destinationSnippettemplateInstance, dto.getIndex());
+		log.info("addSibling: End");
 		return response;
 
 	}

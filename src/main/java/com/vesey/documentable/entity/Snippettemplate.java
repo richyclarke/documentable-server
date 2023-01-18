@@ -2,6 +2,7 @@ package com.vesey.documentable.entity;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Entity;
@@ -34,35 +35,43 @@ public class Snippettemplate extends SnippettemplateBase {
 	@Where(clause = "active = true")
 	private Collection<Snippettemplate> snippettemplates;
 
-	@JsonIgnore
-	@Transient
-	public static String getListSQL(Class<?> type, Map<String, Object> requestMap) {
-		String documenttemplateUuid = (String) requestMap.get("documenttemplateUuid");
+	public static List<Snippettemplate> getForDocumenttemplate(String documenttemplateUuid, DBFacade dbFacade, Boolean all) {
+		Map<String, Object> requestMap = new HashMap<>();
+		requestMap.put("documenttemplateUuid", documenttemplateUuid);
 
-		String sql = "SELECT DISTINCT Object(x) FROM Snippettemplate x "
-				+ "WHERE x.parent IS NULL "
-				+ "AND x.active = 1 ";
+		String sql = Snippettemplate.getListSQL(Snippettemplate.class, requestMap, all);
+		Map<String, Object> params = getListParams(requestMap);
 
-		if (Utils.isNotEmpty(documenttemplateUuid)) {
-			sql += "AND x.documenttemplate.uuid = :documenttemplateUuid "
-					+ "ORDER by x.sortorder ASC ";
+		Integer startPosition = null;
+		Integer maxResults = null;
 
+		Integer page = (Integer) requestMap.get("page");
+		Integer rowsPerPage = (Integer) requestMap.get("rowsPerPage");
+
+		if (page != null && rowsPerPage != null) {
+			maxResults = rowsPerPage;
+			startPosition = page * rowsPerPage;
 		}
-
-		return sql;
+		List<Snippettemplate> instances = dbFacade.getEntityList(Snippettemplate.class, sql, params, false, startPosition, maxResults);
+		return instances;
 	}
 
 	@JsonIgnore
 	@Transient
-	public static String getAllListSQL(Class<?> type, Map<String, Object> requestMap) {
+	public static String getListSQL(Class<?> type, Map<String, Object> requestMap, Boolean all) {
 		String documenttemplateUuid = (String) requestMap.get("documenttemplateUuid");
 
 		String sql = "SELECT DISTINCT Object(x) FROM Snippettemplate x "
 				+ "WHERE x.active = 1 ";
 
+		if (!all) {
+			sql += "AND x.parent IS NULL ";
+		}
+
 		if (Utils.isNotEmpty(documenttemplateUuid)) {
 			sql += "AND x.documenttemplate.uuid = :documenttemplateUuid "
 					+ "ORDER by x.sortorder ASC ";
+
 		}
 
 		return sql;
@@ -70,7 +79,7 @@ public class Snippettemplate extends SnippettemplateBase {
 
 	@JsonIgnore
 	@Transient
-	public static Map<String, Object> getListParams(Map<String, Object> requestMap, Users user) {
+	public static Map<String, Object> getListParams(Map<String, Object> requestMap) {
 
 		String documenttemplateUuid = (String) requestMap.get("documenttemplateUuid");
 

@@ -41,6 +41,7 @@ C:\Projects\github\vesey\documentable\server\src\main\java\com\vesey\documentabl
 C:\Projects\github\vesey\documentable\server\src\main\java\com\vesey\documentable\utils\Resources.java
 C:\Projects\github\vesey\documentable\server\src\main\java\com\vesey\documentable\emails\sections\FooterSocialPanelEmailsection.java
 C:\Projects\github\vesey\documentable\server\src\main\java\com\vesey\documentable\entity\api\RuleAPI.java
+C:\Projects\github\vesey\documentable\server\src\main\java\com\vesey\documentable\entity\dto\SnippettemplateSwapDTO.java
 C:\Projects\github\vesey\documentable\server\src\main\java\com\vesey\documentable\errorhandling\ConflictException.java
 C:\Projects\github\vesey\documentable\server\src\main\java\com\vesey\documentable\entity\dto\UserDTO.java
 C:\Projects\github\vesey\documentable\server\src\main\java\com\vesey\documentable\emails\sections\PreFooterPanelEmailsection.java
