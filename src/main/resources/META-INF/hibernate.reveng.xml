@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+
+	<schema-selection match-schema="documentable" />
+	<type-mapping>
+		<sql-type jdbc-type="BIGINT" hibernate-type="java.lang.Long" />
+		<sql-type jdbc-type="INTEGER"
+			hibernate-type="java.lang.Integer" />
+	</type-mapping>
+
+	<table catalog="documentable" name="fileref">
+		<column name="type"
+			type="com.vesey.documentable.enums.FilerefTypeEnum" />
+	</table>
+
+	<table catalog="documentable" name="mergefieldtemplate">
+		<column name="type"
+			type="com.vesey.documentable.enums.FormDataTypeEnum" />
+	</table>
+
+	<table catalog="documentable" name="users">
+		<column name="role"
+			type="com.vesey.documentable.enums.RoleTypeEnum" />
+	</table>
+
+	<table catalog="documentable" name="document">
+		<foreign-key constraint-name="FK_document_createdby">
+			<many-to-one property="createdby" />
+		</foreign-key>
+		<foreign-key constraint-name="FK_document_lastmodifiedby">
+			<many-to-one property="lastmodifiedby" />
+		</foreign-key>
+	</table>
+
+	<table catalog="documentable" name="documenttemplate">
+		<foreign-key constraint-name="FK_documenttemplate_users">
+			<many-to-one property="createdby" />
+		</foreign-key>
+	</table>
+
+	<table catalog="documentable" name="snippet">
+		<foreign-key constraint-name="FK_snippet_parent">
+			<many-to-one property="parent" />
+		</foreign-key>
+	</table>
+
+	<table catalog="documentable" name="snippettemplate">
+		<foreign-key constraint-name="FK_snippettemplate_parent">
+			<many-to-one property="parent" />
+		</foreign-key>
+	</table>
+
+	<table catalog="documentable" name="rule">
+		<foreign-key constraint-name="FK_rule_mergefieldtemplate">
+			<many-to-one property="source" />
+		</foreign-key>
+	</table>
+
+	<table catalog="documentable" name="rule">
+		<column name="operand"
+			type="com.vesey.documentable.enums.RuleOperandTypeEnum" />
+	</table>
+
+	<table catalog="documentable" name="datasource">
+		<column name="type"
+			type="com.vesey.documentable.enums.DatasourceTypeEnum" />
+		<foreign-key constraint-name="FK_datasource_user">
+			<many-to-one property="createdby" />
+		</foreign-key>
+	</table>
+
+	<table catalog="documentable" name="matter">
+		<column name="type"
+			type="com.vesey.documentable.enums.MatterTypeEnum" />
+	</table>
+	<table catalog="documentable" name="matter">
+		<foreign-key constraint-name="FK_matter_users">
+			<many-to-one property="createdby" />
+		</foreign-key>
+	</table>
+
+	<table catalog="documentable" name="mergefieldtemplate">
+		<foreign-key
+			constraint-name="FK_mergefieldtemplate_createdby">
+			<many-to-one property="createdby" />
+		</foreign-key>
+	</table>
+
+
+</hibernate-reverse-engineering>

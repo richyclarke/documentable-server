@@ -1,0 +1,161 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Documentable Integration API",
+    "description": "REST services API for sending cases (Matters) into Documentable",
+    "contact": {
+      "name": "Richard Clarke",
+      "url": "http://www.documentable.co.uk",
+      "email": "richard.clarke@veseypartnership.com"
+    },
+    "version": "Version 1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.documentable.co.uk/documentable",
+      "variables": {
+
+      }
+    }
+  ],
+  "paths": {
+    "/rest/integration": {
+      "post": {
+        "tags": [
+          "Integration"
+        ],
+        "summary": "Create a matter",
+        "description": "Create a new matter",
+        "operationId": "postMatter",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrationMatterDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "304": {
+            "description": "Matter not modified (created)"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Server Error"
+          },
+          "default": {
+            "description": "Success.",
+            "content": {
+              "text/plain": {
+              }
+            }
+          }
+        }       
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+	 "CredentialsDTO": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
+      "IntegrationCategoryDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sortorder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrationMergeFieldDTO"
+            }
+          }
+        }
+      },
+      "IntegrationMatterDTO": {
+        "type": "object",
+        "properties": {
+          "credentials": {
+            "$ref": "#/components/schemas/CredentialsDTO"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "refreshUrl": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrationCategoryDTO"
+            }
+          }
+        }
+      },
+      "IntegrationMergeFieldDTO": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "STRING",
+              "INTEGER",
+              "DECIMAL",
+              "CURRENCY",
+              "DATE",
+              "SELECT",
+              "BOOLEAN"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "jwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
