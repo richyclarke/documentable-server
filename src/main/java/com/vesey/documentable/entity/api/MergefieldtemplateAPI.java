@@ -217,7 +217,7 @@ public class MergefieldtemplateAPI {
 		}
 
 		// datasource instance must exist
-		Datasource datasourceInstance = Datasource.getByUuid(dbFacade, dto.getDatasourceUuid());
+		Datasource datasourceInstance = mergefieldtemplateInstance.getDatasource();
 		if (datasourceInstance == null) {
 			log.warn("updateMergefieldtemplate: No Datasource found for UUID : " + dto.getDatasourceUuid());
 			return Response.status(Status.BAD_REQUEST).entity("No Datasource found for UUID : " + dto.getDatasourceUuid()).build();

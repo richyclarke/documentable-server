@@ -77,11 +77,13 @@ public class Datasource extends DatasourceBase {
 				+ "WHERE x.id IS NOT NULL ";
 
 		if (Utils.isNotEmpty(organisationId)) {
-			sql += "AND o.id = :organisationId";
+			sql += "AND o.id = :organisationId ";
 		}
 		if (Utils.isNotEmpty(name)) {
-			sql += "AND x.name like :name";
+			sql += "AND x.name LIKE :name ";
 		}
+
+		sql += "ORDER BY sortorder ASC ";
 
 		return sql;
 	}

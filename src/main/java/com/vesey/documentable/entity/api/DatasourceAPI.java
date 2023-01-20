@@ -274,6 +274,7 @@ public class DatasourceAPI {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
+		log.info("updateDatasource: Name = " + datasourceInstance.getName() + " was sortorder = " + datasourceInstance.getSortorder() + " now sortorder = " + dto.getSortorder());
 		// OK to return
 		Datasource updatedDatasource = mapper.getDatasourceFromDTO(dto, datasourceInstance, new CycleAvoidingMappingContext(user));
 		updatedDatasource = dbFacade.merge(updatedDatasource);
