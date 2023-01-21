@@ -78,7 +78,7 @@ public class Mergefieldtemplate extends MergefieldtemplateBase {
 
 		String sql = "SELECT DISTINCT Object(x) FROM Mergefieldtemplate x "
 				+ "JOIN x.createdby u "
-				+ "WHERE x.uuid IS NOT NULL ";
+				+ "WHERE deleted = 0  ";
 
 		if (Utils.isNotEmpty(userId)) {
 			sql += "AND u.id = :userId ";

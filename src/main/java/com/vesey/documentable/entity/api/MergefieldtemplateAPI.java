@@ -169,7 +169,7 @@ public class MergefieldtemplateAPI {
 		// see if this merge field template already exists
 		Mergefieldtemplate mergefieldtemplateInstance = Mergefieldtemplate.getByUuid(dbFacade, dto.getUuid());
 		if (mergefieldtemplateInstance != null) {
-			log.warn("updateMergefieldtemplate: Exisiting Mergefieldtemplate found for UUID : " + dto.getUuid());
+			log.warn("createMergefieldtemplate: Exisiting Mergefieldtemplate found for UUID : " + dto.getUuid());
 		} else {
 			mergefieldtemplateInstance = new Mergefieldtemplate();
 			mergefieldtemplateInstance = mapper.getMergefieldtemplateFromDTO(dto, mergefieldtemplateInstance, new CycleAvoidingMappingContext(user));
@@ -205,6 +205,7 @@ public class MergefieldtemplateAPI {
 			String authorizationHeader = headers.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
 			user = authFacade.getUserFromToken(authorizationHeader, dbFacade);
 		}
+
 		if (user == null) {
 			log.warn("updateMergefieldtemplate: User not found");
 			return Response.status(Status.FORBIDDEN).entity("User not found").build();
@@ -216,15 +217,19 @@ public class MergefieldtemplateAPI {
 			return Response.status(Status.BAD_REQUEST).entity("No Mergefieldtemplate found for UUID : " + dto.getUuid()).build();
 		}
 
-		// datasource instance must exist
-		Datasource datasourceInstance = mergefieldtemplateInstance.getDatasource();
-		if (datasourceInstance == null) {
-			log.warn("updateMergefieldtemplate: No Datasource found for UUID : " + dto.getDatasourceUuid());
-			return Response.status(Status.BAD_REQUEST).entity("No Datasource found for UUID : " + dto.getDatasourceUuid()).build();
+		Datasource datasourceInstance = null;
+		if (Utils.isNotEmpty(dto.getDatasourceUuid())) {
+			datasourceInstance = Datasource.getByUuid(dbFacade, dto.getDatasourceUuid());
+			// datasource instance must exist
+			if (datasourceInstance == null) {
+				log.warn("updateMergefieldtemplate: No Datasource found for UUID : " + dto.getDatasourceUuid());
+				return Response.status(Status.BAD_REQUEST).entity("No Datasource found for UUID : " + dto.getDatasourceUuid()).build();
+			}
+		} else {
+			datasourceInstance = mergefieldtemplateInstance.getDatasource();
 		}
 
 		// check authorization
-
 		if (!mergefieldtemplateInstance.getCreatedby().getOrganisation().equals(user.getOrganisation())) {
 			log.warn("updateMergefieldtemplate: Mergefieldtemplate does not belong to this organistation.");
 			return Response.status(Status.FORBIDDEN).entity("Mergefieldtemplate does not belong to this organistation.").build();
@@ -255,9 +260,45 @@ public class MergefieldtemplateAPI {
 					@ApiResponse(responseCode = "200", description = "Mergefieldtemplate deleted"),
 					@ApiResponse(responseCode = "403", description = "Forbidden"),
 					@ApiResponse(responseCode = "304", description = "Mergefieldtemplate not modified (updated)") })
-	public Response deleteMergefieldtemplate(@Context HttpHeaders headers, @PathParam("uuid") final String uuid) {
+	public Response deleteMergefieldtemplate(@Context HttpHeaders headers, @PathParam("uuid") final String uuid) throws ConflictException {
 		log.info("deleteMergefieldtemplate: Start");
-		return Response.notModified("Not implemented").build();
+
+		Users user = null;
+		if (Utils.isNotEmpty(headers.getRequestHeader(HttpHeaders.AUTHORIZATION))) {
+			String authorizationHeader = headers.getRequestHeader(HttpHeaders.AUTHORIZATION).get(0);
+			user = authFacade.getUserFromToken(authorizationHeader, dbFacade);
+		}
+		if (user == null) {
+			log.warn("deleteMergefieldtemplate: User not found");
+			return Response.status(Status.FORBIDDEN).entity("User not found").build();
+		}
+
+		Mergefieldtemplate mergefieldtemplateInstance = Mergefieldtemplate.getByUuid(dbFacade, uuid);
+		if (mergefieldtemplateInstance == null) {
+			log.warn("updateMergefieldtemplate: No Mergefieldtemplate found for UUID : " + uuid);
+			return Response.status(Status.BAD_REQUEST).entity("No Mergefieldtemplate found for UUID : " + uuid).build();
+		}
+
+		// datasource instance must exist
+		Datasource datasourceInstance = mergefieldtemplateInstance.getDatasource();
+		if (datasourceInstance == null) {
+			log.warn("updateMergefieldtemplate: No Datasource found for Merge Field Template  UUID : " + uuid);
+			return Response.status(Status.BAD_REQUEST).entity("No Datasource found for Merge Field Template  UUID : " + uuid).build();
+		}
+
+		// check authorization
+		if (!mergefieldtemplateInstance.getCreatedby().getOrganisation().equals(user.getOrganisation())) {
+			log.warn("updateMergefieldtemplate: Mergefieldtemplate does not belong to this organistation.");
+			return Response.status(Status.FORBIDDEN).entity("Mergefieldtemplate does not belong to this organistation.").build();
+		}
+
+		// OK to delete
+		mergefieldtemplateInstance.setDeleted(true);
+		dbFacade.merge(mergefieldtemplateInstance);
+
+		Response response = Response.ok().build();
+		log.info("deleteMergefieldtemplate: End");
+		return response;
 	}
 
 }
