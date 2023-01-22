@@ -127,7 +127,7 @@ public class DocumenttemplateAPI {
 					@ApiResponse(responseCode = "403", description = "Forbidden"),
 					@ApiResponse(description = "The list of Documenttemplates", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = DocumenttemplateDTO.class)))) })
 	public Response listDocumenttemplates(@Context HttpServletRequest request, @Context HttpHeaders headers) {
-		log.info("listDocumenttemplates: Start------ REST : GET DOCUMENTTEMPLATES LIST-----");
+		log.info("listDocumenttemplates: Start");
 
 		Users user = null;
 		if (Utils.isNotEmpty(headers.getRequestHeader(HttpHeaders.AUTHORIZATION))) {

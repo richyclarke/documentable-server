@@ -22,7 +22,7 @@ import javax.enterprise.context.ApplicationScoped;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-01-21T15:22:47+0000",
+    date = "2023-01-22T17:49:27+0000",
     comments = "version: 1.4.2.Final, compiler: Eclipse JDT (IDE) 1.4.100.v20220318-0906, environment: Java 11.0.9 (Oracle Corporation)"
 )
 @ApplicationScoped
@@ -183,7 +183,7 @@ public class SnippettemplateMapperImpl extends SnippettemplateMapper {
         if ( mergefieldoption.getId() != null ) {
             mergefieldoptionDTO.setId( String.valueOf( mergefieldoption.getId() ) );
         }
-        mergefieldoptionDTO.setValue( mergefieldoption.getValue() );
+        mergefieldoptionDTO.setSortorder( mergefieldoption.getSortorder() );
 
         return mergefieldoptionDTO;
     }
@@ -414,8 +414,8 @@ public class SnippettemplateMapperImpl extends SnippettemplateMapper {
         }
         mergefieldoption.setVersion( mergefieldoptionDTO.getVersion() );
         mergefieldoption.setUuid( mergefieldoptionDTO.getUuid() );
-        mergefieldoption.setValue( mergefieldoptionDTO.getValue() );
         mergefieldoption.setLabel( mergefieldoptionDTO.getLabel() );
+        mergefieldoption.setSortorder( mergefieldoptionDTO.getSortorder() );
 
         return mergefieldoption;
     }

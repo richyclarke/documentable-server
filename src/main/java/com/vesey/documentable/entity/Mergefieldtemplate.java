@@ -28,7 +28,7 @@ public class Mergefieldtemplate extends MergefieldtemplateBase {
 	}
 
 	@OneToMany(mappedBy = "mergefieldtemplate")
-	@OrderBy(clause = "sortorder DESC")
+	@OrderBy(clause = "sortorder ASC")
 	private Collection<Mergefieldoption> options;
 
 	@JsonIgnore

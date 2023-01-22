@@ -26,10 +26,13 @@ import org.jboss.logging.Logger;
 
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.vesey.documentable.entity.Datasource;
+import com.vesey.documentable.entity.Mergefieldoption;
 import com.vesey.documentable.entity.Mergefieldtemplate;
 import com.vesey.documentable.entity.Users;
+import com.vesey.documentable.entity.dto.MergefieldoptionDTO;
 import com.vesey.documentable.entity.dto.MergefieldtemplateDTO;
 import com.vesey.documentable.entity.map.CycleAvoidingMappingContext;
+import com.vesey.documentable.entity.map.MergefieldoptionMapperImpl;
 import com.vesey.documentable.entity.map.MergefieldtemplateMapperImpl;
 import com.vesey.documentable.errorhandling.ConflictException;
 import com.vesey.documentable.security.Logged;
@@ -64,6 +67,8 @@ public class MergefieldtemplateAPI {
 
 	@Inject
 	MergefieldtemplateMapperImpl mapper;
+	@Inject
+	MergefieldoptionMapperImpl optionMapper;
 
 	@GET
 	@Logged
@@ -238,6 +243,47 @@ public class MergefieldtemplateAPI {
 		// OK to return
 		Mergefieldtemplate updatedMergefieldtemplate = mapper.getMergefieldtemplateFromDTO(dto, mergefieldtemplateInstance, new CycleAvoidingMappingContext(user));
 		mergefieldtemplateInstance.setDatasource(datasourceInstance);
+
+		// handle options
+		if (Utils.isNotEmpty(dto.getOptions())) {
+			for (MergefieldoptionDTO thisDTO : dto.getOptions()) {
+				if (Utils.isNotEmpty(mergefieldtemplateInstance.getOptions())) {
+					Boolean foundExistingDTO = false;
+					for (Mergefieldoption thisMFO : mergefieldtemplateInstance.getOptions()) {
+						if (thisDTO.getUuid().equals(thisMFO.getUuid())) {
+							// found existing MFO - update it
+							Mergefieldoption updatedMergefieldoption = optionMapper.getMergefieldoptionFromDTO(thisDTO, thisMFO, new CycleAvoidingMappingContext(user));
+							updatedMergefieldoption = dbFacade.merge(updatedMergefieldoption);
+							foundExistingDTO = true;
+						}
+					}
+					if (!foundExistingDTO) {
+						// No existing MFO found - add it
+						Mergefieldoption newMergefieldoption = optionMapper.getMergefieldoptionFromDTO(thisDTO, new Mergefieldoption(), new CycleAvoidingMappingContext(user));
+						newMergefieldoption.setMergefieldtemplate(mergefieldtemplateInstance);
+						newMergefieldoption.setSortorder(Utils.getMaxSortorder(mergefieldtemplateInstance));
+						dbFacade.persist(newMergefieldoption);
+					}
+				}
+			}
+		}
+
+		// iterate existing MFOs and see if any need to be deleted
+		if (Utils.isNotEmpty(mergefieldtemplateInstance.getOptions())) {
+			for (Mergefieldoption thisMFO : mergefieldtemplateInstance.getOptions()) {
+				Boolean foundExistingMFO = false;
+				for (MergefieldoptionDTO thisDTO : dto.getOptions()) {
+					if (thisDTO.getUuid().equals(thisMFO.getUuid())) {
+						foundExistingMFO = true;
+					}
+				}
+				if (!foundExistingMFO) {
+					// existing MFO not found in DTO - delete it
+					dbFacade.delete(thisMFO);
+				}
+			}
+		}
+
 		updatedMergefieldtemplate = dbFacade.merge(updatedMergefieldtemplate);
 
 		MergefieldtemplateDTO responseDTO = mapper.getDTOFromMergefieldtemplate(updatedMergefieldtemplate, new CycleAvoidingMappingContext(user));

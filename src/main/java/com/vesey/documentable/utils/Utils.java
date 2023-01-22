@@ -73,6 +73,8 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.vesey.documentable.Constants;
+import com.vesey.documentable.entity.Mergefieldoption;
+import com.vesey.documentable.entity.Mergefieldtemplate;
 
 /**
  *
@@ -1477,6 +1479,18 @@ public class Utils implements Serializable {
 			log.error("Exception : ", e);
 		}
 		return null;
+	}
+
+	public static Integer getMaxSortorder(Mergefieldtemplate mft) {
+		int sortorder = 0;
+		if (Utils.isNotEmpty(mft.getOptions())) {
+			for (Mergefieldoption thisOption : mft.getOptions()) {
+				if (thisOption.getSortorder() > sortorder) {
+					sortorder = thisOption.getSortorder();
+				}
+			}
+		}
+		return sortorder + 1;
 	}
 
 }

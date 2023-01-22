@@ -127,7 +127,7 @@ public class DatasourceAPI {
 					@ApiResponse(responseCode = "403", description = "Forbidden"),
 					@ApiResponse(description = "The list of Datasources", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = DatasourceDTO.class)))) })
 	public Response listDatasources(@Context HttpServletRequest request, @Context HttpHeaders headers) {
-		log.info("listDatasources: Start------ REST : GET DatasourceS LIST-----");
+		log.info("listDatasources: Start");
 
 		Users user = null;
 		if (Utils.isNotEmpty(headers.getRequestHeader(HttpHeaders.AUTHORIZATION))) {

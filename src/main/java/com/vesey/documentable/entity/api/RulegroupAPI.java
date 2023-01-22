@@ -208,13 +208,13 @@ public class RulegroupAPI {
 		}
 		if (user == null) {
 			log.warn("deleteRulegroup: User not found");
-			return Response.status(Status.FORBIDDEN).build();
+			return Response.status(Status.FORBIDDEN).entity("User not found").build();
 		}
 
 		Rulegroup rulegroupInstance = Rulegroup.getByUuid(dbFacade, uuid);
 		if (rulegroupInstance == null) {
 			log.warn("deleteRulegroup: No Rulegroup found for UUID : " + uuid);
-			return Response.status(Status.BAD_REQUEST).build();
+			return Response.status(Status.BAD_REQUEST).entity("No Rulegroup found for UUID : " + uuid).build();
 		}
 
 		// snippet template must exist
@@ -228,13 +228,13 @@ public class RulegroupAPI {
 		Documenttemplate documenttemplateInstance = Documenttemplate.findForSnippettemplate(dbFacade, snippettemplateInstance);
 		if (!documenttemplateInstance.getCreatedby().getOrganisation().equals(user.getOrganisation())) {
 			log.warn("deleteRulegroup: Rulegroup does not belong to this organistation.");
-			return Response.status(Status.FORBIDDEN).build();
+			return Response.status(Status.FORBIDDEN).entity("Rulegroup does not belong to this organistation.").build();
 		}
 
 		// Must be empty to delete
 		if (Utils.isNotEmpty(rulegroupInstance.getRules())) {
-			log.warn("deleteRulegroup: Rulegroup does not belong to this organistation.");
-			return Response.status(Status.FORBIDDEN).build();
+			log.warn("deleteRulegroup: Rulegroup contains rules.");
+			return Response.status(Status.FORBIDDEN).entity("Rulegroup contains rules.").build();
 		}
 
 		dbFacade.delete(rulegroupInstance);

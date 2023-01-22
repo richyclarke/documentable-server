@@ -13,9 +13,11 @@ import com.vesey.documentable.entity.dto.MergefieldoptionDTO;
 @Mapper(componentModel = "cdi", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public abstract class MergefieldoptionMapper {
 
-	@Mapping(source = "value", target = "id")
+	@Mapping(source = "uuid", target = "id")
+	@Mapping(source = "mergefieldtemplate.uuid", target = "mergefieldtemplateUuid")
 	public abstract MergefieldoptionDTO getDTOFromMergefieldoption(Mergefieldoption entity, @Context CycleAvoidingMappingContext context);
 
+	@Mapping(target = "id", ignore = true)
 	public abstract Mergefieldoption getMergefieldoptionFromDTO(MergefieldoptionDTO dto, @MappingTarget Mergefieldoption entity, @Context CycleAvoidingMappingContext context);
 
 }

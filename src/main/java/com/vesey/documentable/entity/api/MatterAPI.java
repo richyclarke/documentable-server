@@ -131,7 +131,7 @@ public class MatterAPI {
 					@ApiResponse(responseCode = "403", description = "Forbidden"),
 					@ApiResponse(description = "The list of Matters", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = MatterDTO.class)))) })
 	public Response listMatters(@Context HttpServletRequest request, @Context HttpHeaders headers) {
-		log.info("listMatters: Start------ REST : GET MATTERS LIST-----");
+		log.info("listMatters: Start");
 
 		Users user = null;
 		if (Utils.isNotEmpty(headers.getRequestHeader(HttpHeaders.AUTHORIZATION))) {

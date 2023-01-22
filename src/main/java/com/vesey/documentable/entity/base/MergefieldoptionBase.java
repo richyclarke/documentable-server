@@ -1,11 +1,12 @@
 package com.vesey.documentable.entity.base;
 
+import static javax.persistence.GenerationType.IDENTITY;
+
 // Generated 10 Jan 2023, 13:56:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
 
 import javax.persistence.Column;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
-import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -13,15 +14,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.vesey.documentable.entity.*;
-import javax.persistence.Column;
-import com.vesey.documentable.session.DBFacade;
-import javax.persistence.Transient;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import java.util.Collection;
-import com.vesey.documentable.utils.Utils;
+import com.vesey.documentable.entity.Mergefieldtemplate;
 
 @SuppressWarnings("unused")
 
@@ -52,9 +45,6 @@ public abstract class MergefieldoptionBase extends BaseEntity implements java.io
 
 	@Column(name = "uuid", nullable = false, length = 36)
 	protected String uuid;
-
-	@Column(name = "value", nullable = false, length = 100)
-	protected String value;
 
 	@Column(name = "label", nullable = false, length = 100)
 	protected String label;
@@ -95,14 +85,6 @@ public abstract class MergefieldoptionBase extends BaseEntity implements java.io
 
 	public void setUuid(String uuid) {
 		this.uuid = uuid;
-	}
-
-	public String getValue() {
-		return this.value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
 	}
 
 	public String getLabel() {

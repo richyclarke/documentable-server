@@ -10,10 +10,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @JsonIdentityInfo(generator = JSOGGenerator.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MergefieldoptionDTO extends BaseEntityDTO {
-	private String id; // so we can iterate over this DTO directly in react
 
+	private String id; // so we can iterate over this DTO directly in react
 	private String label;
-	private String value;
+	private String key; // for uuid to give a key to all iterations in javascript
+	private Integer sortorder;
+	private String mergefieldtemplateUuid;
 
 	public String getLabel() {
 		return label;
@@ -31,11 +33,27 @@ public class MergefieldoptionDTO extends BaseEntityDTO {
 		this.id = id;
 	}
 
-	public String getValue() {
-		return value;
+	public String getMergefieldtemplateUuid() {
+		return mergefieldtemplateUuid;
 	}
 
-	public void setValue(String value) {
-		this.value = value;
+	public void setMergefieldtemplateUuid(String mergefieldtemplateUuid) {
+		this.mergefieldtemplateUuid = mergefieldtemplateUuid;
+	}
+
+	public Integer getSortorder() {
+		return sortorder;
+	}
+
+	public void setSortorder(Integer sortorder) {
+		this.sortorder = sortorder;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 }
