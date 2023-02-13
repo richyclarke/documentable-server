@@ -14,7 +14,7 @@ import javax.inject.Inject;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-01-22T18:36:17+0000",
+    date = "2023-02-13T20:27:22+0000",
     comments = "version: 1.4.2.Final, compiler: Eclipse JDT (IDE) 1.4.100.v20220318-0906, environment: Java 11.0.9 (Oracle Corporation)"
 )
 @ApplicationScoped

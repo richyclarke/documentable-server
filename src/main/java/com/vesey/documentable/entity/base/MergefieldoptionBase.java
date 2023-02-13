@@ -1,12 +1,11 @@
 package com.vesey.documentable.entity.base;
 
-import static javax.persistence.GenerationType.IDENTITY;
-
-// Generated 10 Jan 2023, 13:56:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
+// Generated 24 Jan 2023, 11:06:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
 
 import javax.persistence.Column;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -14,7 +13,15 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import com.vesey.documentable.entity.Mergefieldtemplate;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vesey.documentable.entity.*;
+import javax.persistence.Column;
+import com.vesey.documentable.session.DBFacade;
+import javax.persistence.Transient;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import java.util.Collection;
+import com.vesey.documentable.utils.Utils;
 
 @SuppressWarnings("unused")
 

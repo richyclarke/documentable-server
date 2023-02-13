@@ -1,15 +1,14 @@
 package com.vesey.documentable.entity.base;
 
-import static javax.persistence.GenerationType.IDENTITY;
+// Generated 24 Jan 2023, 11:06:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
 
+import com.vesey.documentable.enums.FormDataTypeEnum;
 import java.math.BigDecimal;
 import java.util.Date;
-
 import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -19,13 +18,15 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
 
-import com.vesey.documentable.entity.Datasource;
-import com.vesey.documentable.entity.Documenttemplate;
-import com.vesey.documentable.entity.Users;
-
-// Generated 10 Jan 2023, 13:56:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
-
-import com.vesey.documentable.enums.FormDataTypeEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.vesey.documentable.entity.*;
+import javax.persistence.Column;
+import com.vesey.documentable.session.DBFacade;
+import javax.persistence.Transient;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import java.util.Collection;
+import com.vesey.documentable.utils.Utils;
 
 @SuppressWarnings("unused")
 
@@ -98,8 +99,8 @@ public abstract class MergefieldtemplateBase extends BaseEntity implements java.
 	@Column(name = "samplebooleanvalue")
 	protected Boolean samplebooleanvalue;
 
-	@Column(name = "deleted")
-	private boolean deleted;
+	@Column(name = "deleted", nullable = false)
+	protected boolean deleted;
 
 	public MergefieldtemplateBase() {
 	}
@@ -232,6 +233,14 @@ public abstract class MergefieldtemplateBase extends BaseEntity implements java.
 		this.samplebooleanvalue = samplebooleanvalue;
 	}
 
+	public boolean isDeleted() {
+		return this.deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
+
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 
@@ -266,14 +275,6 @@ public abstract class MergefieldtemplateBase extends BaseEntity implements java.
 		int result = 17;
 		result = 37 * result + (getId() == null ? 0 : this.getId().hashCode());
 		return result;
-	}
-
-	public boolean isDeleted() {
-		return deleted;
-	}
-
-	public void setDeleted(boolean deleted) {
-		this.deleted = deleted;
 	}
 
 }

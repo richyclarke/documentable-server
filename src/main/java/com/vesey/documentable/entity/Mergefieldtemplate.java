@@ -2,6 +2,7 @@ package com.vesey.documentable.entity;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Entity;
@@ -48,6 +49,29 @@ public class Mergefieldtemplate extends MergefieldtemplateBase {
 		Map<String, Object> params = new HashMap<>();
 		params.put("uuid", uuid);
 		return dbFacade.getEntityQuery(Mergefieldtemplate.class, "select Object(x) from Mergefieldtemplate x where uuid = :uuid", params, false);
+	}
+
+	public static List<Mergefieldtemplate> getForUser(DBFacade dbFacade, Users user) {
+		Map<String, Object> requestMap = new HashMap<>();
+		requestMap.put("userId", user.getId());
+		requestMap.put("organisationId", user.getOrganisation().getId());
+
+		String sql = Mergefieldtemplate.getListSQL(Mergefieldtemplate.class, requestMap);
+		Map<String, Object> params = Mergefieldtemplate.getListParams(requestMap, user);
+
+		Integer startPosition = null;
+		Integer maxResults = null;
+
+		Integer page = (Integer) requestMap.get("page");
+		Integer rowsPerPage = (Integer) requestMap.get("rowsPerPage");
+
+		if (page != null && rowsPerPage != null) {
+			maxResults = rowsPerPage;
+			startPosition = page * rowsPerPage;
+		}
+
+		List<Mergefieldtemplate> instances = dbFacade.getEntityList(Mergefieldtemplate.class, sql, params, false, startPosition, maxResults);
+		return instances;
 	}
 
 	public static Mergefieldtemplate getByKey(DBFacade dbFacade, String key, Integer organistationId) {

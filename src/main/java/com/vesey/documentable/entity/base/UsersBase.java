@@ -1,6 +1,6 @@
 package com.vesey.documentable.entity.base;
 
-// Generated 10 Jan 2023, 13:56:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
+// Generated 24 Jan 2023, 11:06:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
 
 import com.vesey.documentable.enums.RoleTypeEnum;
 import java.util.Date;

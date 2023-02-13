@@ -1,9 +1,7 @@
 package com.vesey.documentable.entity.api;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -104,25 +102,7 @@ public class MergefieldtemplateAPI {
 			return Response.status(Status.FORBIDDEN).build();
 		}
 
-		Map<String, Object> requestMap = new HashMap<>();
-		requestMap.put("userId", user.getId());
-		requestMap.put("organisationId", user.getOrganisation().getId());
-
-		String sql = Mergefieldtemplate.getListSQL(Mergefieldtemplate.class, requestMap);
-		Map<String, Object> params = Mergefieldtemplate.getListParams(requestMap, user);
-
-		Integer startPosition = null;
-		Integer maxResults = null;
-
-		Integer page = (Integer) requestMap.get("page");
-		Integer rowsPerPage = (Integer) requestMap.get("rowsPerPage");
-
-		if (page != null && rowsPerPage != null) {
-			maxResults = rowsPerPage;
-			startPosition = page * rowsPerPage;
-		}
-		String result;
-		List<Mergefieldtemplate> instances = dbFacade.getEntityList(Mergefieldtemplate.class, sql, params, false, startPosition, maxResults);
+		List<Mergefieldtemplate> instances = Mergefieldtemplate.getForUser(dbFacade, user);
 
 		List<MergefieldtemplateDTO> dtos = new ArrayList<>();
 		if (Utils.isNotEmpty(instances)) {
@@ -130,7 +110,7 @@ public class MergefieldtemplateAPI {
 				dtos.add(mapper.getDTOFromMergefieldtemplate(thisMergefieldtemplate, new CycleAvoidingMappingContext(user)));
 			}
 		}
-		result = Utils.convertToJSON(dtos);
+		String result = Utils.convertToJSON(dtos);
 		Response response = Response.ok(result).build();
 		log.info("listMergefieldtemplates: End");
 		return response;
@@ -272,9 +252,11 @@ public class MergefieldtemplateAPI {
 		if (Utils.isNotEmpty(mergefieldtemplateInstance.getOptions())) {
 			for (Mergefieldoption thisMFO : mergefieldtemplateInstance.getOptions()) {
 				Boolean foundExistingMFO = false;
-				for (MergefieldoptionDTO thisDTO : dto.getOptions()) {
-					if (thisDTO.getUuid().equals(thisMFO.getUuid())) {
-						foundExistingMFO = true;
+				if (Utils.isNotEmpty(dto.getOptions())) {
+					for (MergefieldoptionDTO thisDTO : dto.getOptions()) {
+						if (thisDTO.getUuid().equals(thisMFO.getUuid())) {
+							foundExistingMFO = true;
+						}
 					}
 				}
 				if (!foundExistingMFO) {

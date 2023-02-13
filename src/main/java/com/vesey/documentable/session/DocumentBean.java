@@ -1,9 +1,7 @@
 package com.vesey.documentable.session;
 
+import java.io.OutputStream;
 import java.io.Serializable;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,14 +24,16 @@ import com.vesey.documentable.draftjs.EntityRangeDTO;
 import com.vesey.documentable.draftjs.InlineStyleRangeDTO;
 import com.vesey.documentable.draftjs.SplitStringDTO;
 import com.vesey.documentable.entity.Document;
+import com.vesey.documentable.entity.Documenttemplate;
 import com.vesey.documentable.entity.Matter;
 import com.vesey.documentable.entity.Mergefield;
 import com.vesey.documentable.entity.Mergefieldtemplate;
 import com.vesey.documentable.entity.Rule;
 import com.vesey.documentable.entity.Rulegroup;
 import com.vesey.documentable.entity.Snippet;
-import com.vesey.documentable.entity.map.CycleAvoidingMappingContext;
+import com.vesey.documentable.entity.Snippettemplate;
 import com.vesey.documentable.entity.map.SnippetMapperImpl;
+import com.vesey.documentable.utils.DocumentUtils;
 import com.vesey.documentable.utils.Utils;
 
 @Named
@@ -78,7 +78,7 @@ public class DocumentBean implements Serializable {
 						for (Entry<String, EntityDTO> entry : dto.getEntityMap().entrySet()) {
 							Map<String, Object> data = entry.getValue().getData();
 
-							String key = getKeyFromData(data);
+							String key = DocumentUtils.getKeyFromData(data);
 
 							if (key != null) {
 								if (Utils.isNotEmpty(allMergefields)) {
@@ -105,7 +105,6 @@ public class DocumentBean implements Serializable {
 							if (Utils.isNotEmpty(thisRG.getRules())) {
 								for (Rule thisR : thisRG.getRules()) {
 									String key = thisR.getSource().getKey();
-									Boolean found = false;
 									if (Utils.isNotEmpty(allMergefields)) {
 										for (Mergefield thisMF : allMergefields) {
 											if (key.equals(thisMF.getMergefieldtemplate().getKey())) {
@@ -167,7 +166,7 @@ public class DocumentBean implements Serializable {
 					Boolean found = false;
 					Map<String, Object> data = entry.getValue().getData();
 
-					String key = getKeyFromData(data);
+					String key = DocumentUtils.getKeyFromData(data);
 
 					if (Utils.isNotEmpty(mergefields)) {
 						for (Mergefield thisMF : mergefields) {
@@ -191,7 +190,6 @@ public class DocumentBean implements Serializable {
 		}
 
 		// also check if merge fields are referred to in rules
-
 		if (thisSnippet.getSnippettemplate().getRuleset() != null) {
 			if (Utils.isNotEmpty(thisSnippet.getSnippettemplate().getRuleset().getRulegroups())) {
 				for (Rulegroup thisRG : thisSnippet.getSnippettemplate().getRuleset().getRulegroups()) {
@@ -221,29 +219,13 @@ public class DocumentBean implements Serializable {
 		}
 	}
 
-	public String getKeyFromData(Map<String, Object> data) {
-		String key = (String) data.get("key");
-		if (Utils.isEmpty(key)) {
-			// key may be 'value' attribute of 'mention'
-			@SuppressWarnings("unchecked")
-			Map<String, Object> mention = (Map<String, Object>) data.get("mention");
-			if (Utils.isNotEmpty(mention)) {
-				key = (String) mention.get("value");
-			}
-		}
-		if (key == null) {
-			log.warn("getKeyFromData: key is null");
-		}
-		return key;
-	}
-
 	public String generateHTMLPreview(String documentUuid) {
 		log.info("generateHTMLPreview: Start");
 		Document doc = Document.getByUuid(dbFacade, documentUuid);
 		if (doc != null) {
 			Collection<Mergefield> mergefields = Mergefield.getForMatter(dbFacade, doc.getMatter().getId());
 
-			Collection<Snippet> snippets = getSnippetsForDocument(doc);
+			Collection<Snippet> snippets = DocumentUtils.getSnippetsForDocument(doc, mapper, mergefields);
 			StringBuilder sb = new StringBuilder();
 			sb.append(PREFACE);
 			if (doc.isNumbered()) {
@@ -270,6 +252,34 @@ public class DocumentBean implements Serializable {
 		}
 		log.warn(" Failed - Document is null for documentUuid: " + documentUuid);
 		return null;
+	}
+
+	public void generateDocumentPDF(String documentUuid, OutputStream out) {
+		log.info("generateDocumentPDF: Start");
+		Document doc = Document.getByUuid(dbFacade, documentUuid);
+
+		if (doc != null) {
+			Collection<Mergefield> mergefields = Mergefield.getForMatter(dbFacade, doc.getMatter().getId());
+			Collection<Snippet> snippets = DocumentUtils.getSnippetsForDocument(doc, mapper, mergefields);
+			PDFFacade.createPDF(doc, mergefields, snippets, out);
+		} else {
+			log.error("generateDocumentPDF: Failed - Document is null for documentUuid: " + documentUuid);
+		}
+		log.info("generateDocumentPDF: End");
+	}
+
+	public void generateDocumenttemplatePDF(String documenttemplateUuid, OutputStream out) {
+		log.info("generateDocumentPDF: Start");
+		Documenttemplate dt = Documenttemplate.getByUuid(dbFacade, documenttemplateUuid);
+
+		if (dt != null) {
+			Collection<Mergefieldtemplate> mergefieldtemplates = Mergefieldtemplate.getForUser(dbFacade, dt.getCreatedby());
+			Collection<Snippettemplate> snippettemplates = Snippettemplate.getForDocumenttemplate(documenttemplateUuid, dbFacade, false);
+			PDFFacade.createPDF(dt, mergefieldtemplates, snippettemplates, out);
+		} else {
+			log.error("generateDocumenttemplatePDF: Failed - Documenttemplate is null for documenttemplateUuid: " + documenttemplateUuid);
+		}
+		log.info("generateDocumenttemplatePDF: End");
 	}
 
 	private String processSnippet(Snippet snippet, Snippet parent, Collection<Mergefield> mergefields, String prefix, Integer level, Integer index) {
@@ -342,47 +352,13 @@ public class DocumentBean implements Serializable {
 	private String createElement(String text, Collection<InlineStyleRangeDTO> inlineStyleRanges, Collection<EntityRangeDTO> entityRanges, Collection<Mergefield> mergefields,
 			Map<String, EntityDTO> entityMap) {
 
-		// split into sections
-		List<SplitStringDTO> sss = new ArrayList<>();
-		int currentStart = 0;
-		while (currentStart < text.length()) {
-			int end = getNextBreak(currentStart, text.length(), inlineStyleRanges, entityRanges);
-			String subStr = text.substring(currentStart, end);
-			SplitStringDTO newSplit = new SplitStringDTO(currentStart, end, subStr);
+		List<SplitStringDTO> sss = DocumentUtils.splitIntoSections(text, inlineStyleRanges, entityRanges, mergefields, entityMap, true);
 
-			newSplit.setReplacementText(findReplacementText(newSplit, entityRanges, mergefields, entityMap));
-			sss.add(newSplit);
-			currentStart = end;
-		}
-
-		// for each section, add styles
-		for (InlineStyleRangeDTO thisRange : inlineStyleRanges) {
-			for (SplitStringDTO thisSSS : sss) {
-				int rangeStart = thisRange.getOffset();
-				int rangeEnd = thisRange.getOffset() + thisRange.getLength();
-				if (rangeStart <= thisSSS.getStart() && rangeEnd >= thisSSS.getEnd()) {
-					thisSSS.getStyle().add(thisRange.getStyle());
-				}
-			}
-		}
-		// for each section, add styles
-		for (EntityRangeDTO thisRange : entityRanges) {
-			for (SplitStringDTO thisSSS : sss) {
-				int rangeStart = thisRange.getOffset();
-				int rangeEnd = thisRange.getOffset() + thisRange.getLength();
-				if (rangeStart <= thisSSS.getStart() && rangeEnd >= thisSSS.getEnd()) {
-					if (!thisSSS.getStyle().contains("INSERT")) {
-						thisSSS.getStyle().add("INSERT");
-					}
-				}
-			}
-		}
 		StringBuilder sb = new StringBuilder();
 		for (SplitStringDTO thisSS : sss) {
 			if (Utils.isEmpty(thisSS.getStyle())) {
-				sb.append(thisSS.getText());
+				sb.append(swapText(thisSS));
 			} else {
-
 				for (String thisSSS : thisSS.getStyle()) {
 					switch (thisSSS) {
 					case "BOLD":
@@ -402,11 +378,8 @@ public class DocumentBean implements Serializable {
 						break;
 					}
 				}
-				if ((Utils.isNotEmpty(thisSS.getReplacementText()))) {
-					sb.append(thisSS.getReplacementText());
-				} else {
-					sb.append(thisSS.getText());
-				}
+
+				sb.append(swapText(thisSS));
 
 				for (String thisSSS : thisSS.getStyle()) {
 
@@ -435,111 +408,16 @@ public class DocumentBean implements Serializable {
 
 	}
 
-	private String findReplacementText(SplitStringDTO split, Collection<EntityRangeDTO> entityRanges, Collection<Mergefield> mergefields, Map<String, EntityDTO> entityMap) {
-		if (Utils.isNotEmpty(entityRanges)) {
-			for (EntityRangeDTO thisEntity : entityRanges) {
-				int start = thisEntity.getOffset();
-				int end = thisEntity.getOffset() + thisEntity.getLength();
-
-				if (start == split.getStart() && end == split.getEnd()) {
-					// found
-					return findReplacement(thisEntity, mergefields, entityMap);
-				}
+	public String swapText(SplitStringDTO thisSS) {
+		if (Utils.isNotEmpty(thisSS.getReplacementText())) {
+			if (thisSS.getReplacementText().equals("[UNKNOWN]") || thisSS.getReplacementText().equals("[INCOMPLETE]")) {
+				return "<span style='color:red;'>" + thisSS.getReplacementText() + "</span>";
+			} else {
+				return thisSS.getReplacementText();
 			}
-
+		} else {
+			return thisSS.getText();
 		}
-		return null;
-	}
-
-	private String findReplacement(EntityRangeDTO entityRangeDTO, Collection<Mergefield> mergefields, Map<String, EntityDTO> entityMap) {
-
-		String key = getKeyFromEntity(entityRangeDTO.getKey(), entityMap);
-
-		if (Utils.isNotEmpty(mergefields) && Utils.isNotEmpty(key)) {
-			for (Mergefield thisMF : mergefields) {
-
-				if (key.equals(thisMF.getMergefieldtemplate().getKey())) {
-
-					switch (thisMF.getMergefieldtemplate().getType()) {
-					case BOOLEAN:
-						if (Utils.isNotEmpty(thisMF.getBooleanvalue())) {
-							return thisMF.getBooleanvalue().toString();
-						}
-						break;
-					case CURRENCY:
-						if (Utils.isNotEmpty(thisMF.getDecimalvalue())) {
-							NumberFormat currencyFormatter = NumberFormat.getCurrencyInstance();
-							return currencyFormatter.format(thisMF.getDecimalvalue());
-						}
-						break;
-					case DATE:
-						if (Utils.isNotEmpty(thisMF.getDatevalue())) {
-							SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
-							return dateFormatter.format(thisMF.getDatevalue());
-						}
-						break;
-					case DECIMAL:
-						if (Utils.isNotEmpty(thisMF.getDecimalvalue())) {
-							DecimalFormat decimalFormatter = new DecimalFormat("#,###.##");
-							return decimalFormatter.format(thisMF.getDecimalvalue());
-						}
-						break;
-					case INTEGER:
-						if (Utils.isNotEmpty(thisMF.getIntegervalue())) {
-							return thisMF.getIntegervalue().toString();
-						}
-						break;
-					case STRING:
-					case SELECT:
-						if (Utils.isNotEmpty(thisMF.getStringvalue())) {
-							return thisMF.getStringvalue();
-						}
-						break;
-					default:
-						return "<span style='color:red;'>[UNKNOWN]</span>";
-
-					}
-				}
-			}
-		}
-		return "<span style='color:red;'>[INCOMPLETE]</span>";
-	}
-
-	private String getKeyFromEntity(Integer keyNum, Map<String, EntityDTO> entityMap) {
-		// extract key from data map in entity
-
-		EntityDTO thisEntity = entityMap.get(keyNum.toString());
-
-		if (thisEntity.getType().equals("MENTION") || thisEntity.getType().equals("$mention")) {
-			String foundKey = getKeyFromData(thisEntity.getData());
-			return foundKey;
-		}
-
-		return null;
-	}
-
-	private int getNextBreak(int start, int end, Collection<InlineStyleRangeDTO> styleRanges, Collection<EntityRangeDTO> entityRanges) {
-
-		int potentialEnd = end;
-		for (InlineStyleRangeDTO thisRange : styleRanges) {
-			if (thisRange.getOffset() > start && thisRange.getOffset() < potentialEnd) {
-				potentialEnd = thisRange.getOffset();
-			}
-			int rangeEnd = thisRange.getOffset() + thisRange.getLength();
-			if (rangeEnd > start && rangeEnd < potentialEnd) {
-				potentialEnd = rangeEnd;
-			}
-		}
-		for (EntityRangeDTO thisRange : entityRanges) {
-			if (thisRange.getOffset() > start && thisRange.getOffset() < potentialEnd) {
-				potentialEnd = thisRange.getOffset();
-			}
-			int rangeEnd = thisRange.getOffset() + thisRange.getLength();
-			if (rangeEnd > start && rangeEnd < potentialEnd) {
-				potentialEnd = rangeEnd;
-			}
-		}
-		return potentialEnd;
 	}
 
 	private String createElementStyle(BlockDTO thisBlock) {
@@ -617,331 +495,6 @@ public class DocumentBean implements Serializable {
 			}
 		}
 		return "span";
-	}
-
-	public Collection<Snippet> getSnippetsForDocument(Document document) {
-		// log.info("getSnippetsForDocument: Start.");
-		currentMatter = document.getMatter();
-		Collection<Snippet> initialSnippets = document.getSnippets();
-		Collection<Snippet> finalSnippets = new ArrayList<>();
-		if (Utils.isNotEmpty(initialSnippets)) {
-			log.info("getSnippetsForDocument: Iterating document snippets......................");
-			for (Snippet thisSnippet : initialSnippets) {
-				if (thisSnippet.getParent() == null) {
-					// log.info("getSnippetsForDocument: Processing this snippet = " + thisSnippet.getName());
-					Snippet filteredSnippet = filterSnippet(thisSnippet);
-					if (filteredSnippet != null) {
-						// log.info("getSnippetsForDocument: Adding filtered snippet");
-						finalSnippets.add(filteredSnippet);
-					} else {
-						// log.info("getSnippetsForDocument: NOT Adding snippet");
-					}
-				}
-			}
-		}
-		// log.info("getSnippetsForDocument: End.");
-		return finalSnippets;
-	}
-
-	private Snippet filterSnippet(Snippet snippet) {
-		// log.info("filterSnippet: Processing snippet... " + snippet.getName());
-		if (!shouldInclude(snippet)) {
-			// log.info("filterSnippet: NOT including this snippet = " + snippet.getName());
-			return null;
-		} else {
-			// log.info("filterSnippet: Will be including this snippet after processing children... " + snippet.getName());
-			Snippet newSnippet = mapper.cloneSnippet(snippet, new CycleAvoidingMappingContext());
-			newSnippet.setSnippets(new ArrayList<>());
-			{
-				if (Utils.isNotEmpty(snippet.getSnippets())) {
-					// log.info("filterSnippet: Snippet has children... " + snippet.getName());
-					for (Snippet childSnippet : snippet.getSnippets()) {
-						Snippet filteredSnippet = filterSnippet(childSnippet);
-						if (filteredSnippet != null) {
-							// log.info("filterSnippet: Adding child snippet has children... " + filteredSnippet.getName());
-							newSnippet.getSnippets().add(filteredSnippet);
-						}
-					}
-
-				}
-			}
-			// log.info("filterSnippet: Returning filtered snippet : " + newSnippet.getName());
-
-			return newSnippet;
-		}
-	}
-
-	private boolean shouldInclude(Snippet thisSnippet) {
-		if (thisSnippet.getSnippettemplate().getRuleset() == null) {
-			return true;
-		}
-		if (Utils.isEmpty(thisSnippet.getSnippettemplate().getRuleset().getRulegroups())) {
-			return true;
-		}
-
-		boolean shouldInclude = true;
-
-		if (thisSnippet.getSnippettemplate().getRuleset().isOperand()) {
-			// AND rule groups together - all satisfied rule group is good
-			boolean allRuleGroupsSatisfied = true;
-			for (Rulegroup thisRG : thisSnippet.getSnippettemplate().getRuleset().getRulegroups()) {
-				if (!ruleGroupSatisfied(thisRG)) {
-					allRuleGroupsSatisfied = false;
-				}
-			}
-			shouldInclude = allRuleGroupsSatisfied;
-		} else {
-			// OR rule groups together - any satisfied rule group is good
-			boolean anyRuleGroupsSatisfied = false;
-			for (Rulegroup thisRG : thisSnippet.getSnippettemplate().getRuleset().getRulegroups()) {
-				if (ruleGroupSatisfied(thisRG)) {
-					anyRuleGroupsSatisfied = true;
-				}
-			}
-			shouldInclude = anyRuleGroupsSatisfied;
-		}
-		return shouldInclude;
-	}
-
-	private boolean ruleGroupSatisfied(Rulegroup rulegroup) {
-		boolean ruleGroupSatisfied = true;
-
-		if (rulegroup.getRuleset().isOperand()) {
-			// OR rules together - any satisfied rule is good
-			boolean anyRuleSatisfied = false;
-			for (Rule thisR : rulegroup.getRules()) {
-				if (ruleSatisfied(thisR)) {
-					anyRuleSatisfied = true;
-				}
-			}
-			ruleGroupSatisfied = anyRuleSatisfied;
-		} else {
-			// AND rule groups together - all satisfied rule group is good
-			boolean allRulesSatisfied = true;
-			for (Rule thisR : rulegroup.getRules()) {
-				if (!ruleSatisfied(thisR)) {
-					allRulesSatisfied = false;
-				}
-			}
-			ruleGroupSatisfied = allRulesSatisfied;
-		}
-		return ruleGroupSatisfied;
-	}
-
-	private boolean ruleSatisfied(Rule rule) {
-		boolean ruleSatisfied = true;
-
-		if (rule.getSource() != null) {
-			switch (rule.getSource().getType()) {
-			case BOOLEAN:
-				ruleSatisfied = checkBooleanRule(rule);
-				break;
-			case CURRENCY:
-			case DECIMAL:
-				ruleSatisfied = checkDecimalRule(rule);
-				break;
-			case DATE:
-				ruleSatisfied = checkDateRule(rule);
-				break;
-
-			case INTEGER:
-				ruleSatisfied = checkIntegerRule(rule);
-				break;
-			case SELECT:
-			case STRING:
-				ruleSatisfied = checkStringRule(rule);
-				break;
-			default:
-				log.error("ruleSatisfied: Unknow rule type : " + rule.getSource().getType());
-				break;
-			}
-		}
-		return ruleSatisfied;
-	}
-
-	private Mergefield findMergefield(String key) {
-		if (Utils.isNotEmpty(currentMatter.getMergefields())) {
-			for (Mergefield thisMF : currentMatter.getMergefields()) {
-				if (thisMF.getMergefieldtemplate().getKey().equals(key)) {
-					return thisMF;
-				}
-			}
-		}
-		return null;
-	}
-
-	private boolean checkBooleanRule(Rule rule) {
-		Mergefield mf = findMergefield(rule.getSource().getKey());
-		if (mf == null) {
-			log.error("checkBooleanRule: Unable to find Mergefield for Mergefieldtemplate key : " + rule.getSource().getKey());
-			return false;
-		}
-		if (rule.getBooleanvalue() != null && mf.getBooleanvalue() != null) {
-			switch (rule.getOperand()) {
-			case EQUALS:
-				if (rule.getBooleanvalue().equals(mf.getBooleanvalue()))
-					return true;
-				break;
-			case NOT_EQUALS:
-				if (!rule.getBooleanvalue().equals(mf.getBooleanvalue()))
-					return true;
-				break;
-			default:
-				// return true so snippet appears if rule has an invalid operand
-				return true;
-			}
-		} else {
-			// return true so snippet appears if rule value not set
-			return false;
-		}
-		return false;
-	}
-
-	private boolean checkStringRule(Rule rule) {
-		Mergefield mf = findMergefield(rule.getSource().getKey());
-		if (mf == null) {
-			log.error("checkStringRule: Unable to find Mergefield for Mergefieldtemplate key : " + rule.getSource().getKey());
-			return false;
-		}
-		if (rule.getStringvalue() != null && mf.getStringvalue() != null) {
-			switch (rule.getOperand()) {
-			case EQUALS:
-				if (rule.getStringvalue().equals(mf.getStringvalue()))
-					return true;
-				break;
-			case NOT_EQUALS:
-				if (!rule.getStringvalue().equals(mf.getStringvalue()))
-					return true;
-				break;
-			case INCLUDES:
-				if (mf.getStringvalue().contains(rule.getStringvalue()))
-					return true;
-				break;
-			case STARTS_WITH:
-				if (mf.getStringvalue().startsWith(rule.getStringvalue()))
-					return true;
-				break;
-			case EXCLUDES:
-				if (!mf.getStringvalue().contains(rule.getStringvalue()))
-					return true;
-				break;
-			default:
-				// return true so snippet appears if rule has an invalid operand
-				return true;
-			}
-		} else {
-			// return true so snippet appears if rule value not set
-			return false;
-		}
-		return false;
-	}
-
-	private boolean checkDecimalRule(Rule rule) {
-		Mergefield mf = findMergefield(rule.getSource().getKey());
-		if (mf == null) {
-			log.error("checkDecimalRule: Unable to find Mergefield for Mergefieldtemplate key : " + rule.getSource().getKey());
-			return false;
-		}
-		if (rule.getDecimalvalue() != null && mf.getDecimalvalue() != null) {
-			switch (rule.getOperand()) {
-			case EQUALS:
-				if (rule.getDecimalvalue().equals(mf.getDecimalvalue()))
-					return true;
-				break;
-			case NOT_EQUALS:
-				if (!rule.getDecimalvalue().equals(mf.getDecimalvalue()))
-					return true;
-				break;
-			case GREATER_THAN:
-				if (mf.getDecimalvalue().compareTo(rule.getDecimalvalue()) > 0)
-					return true;
-				break;
-			case LESS_THAN:
-				if (mf.getDecimalvalue().compareTo(rule.getDecimalvalue()) < 0)
-					return true;
-				break;
-
-			default:
-				// return true so snippet appears if rule has an invalid operand
-				return true;
-			}
-		} else {
-			// return true so snippet appears if rule value not set
-			return false;
-		}
-		return false;
-	}
-
-	private boolean checkIntegerRule(Rule rule) {
-		Mergefield mf = findMergefield(rule.getSource().getKey());
-		if (mf == null) {
-			log.error("checkIntegerRule: Unable to find Mergefield for Mergefieldtemplate key : " + rule.getSource().getKey());
-			return false;
-		}
-		if (rule.getIntegervalue() != null && mf.getIntegervalue() != null) {
-			switch (rule.getOperand()) {
-			case EQUALS:
-				if (rule.getIntegervalue().equals(mf.getIntegervalue()))
-					return true;
-				break;
-			case NOT_EQUALS:
-				if (!rule.getIntegervalue().equals(mf.getIntegervalue()))
-					return true;
-				break;
-			case GREATER_THAN:
-				if (mf.getIntegervalue().compareTo(rule.getIntegervalue()) > 0)
-					return true;
-				break;
-			case LESS_THAN:
-				if (mf.getIntegervalue().compareTo(rule.getIntegervalue()) < 0)
-					return true;
-				break;
-
-			default:
-				// return true so snippet appears if rule has an invalid operand
-				return true;
-			}
-		} else {
-			// return true so snippet appears if rule value not set
-			return false;
-		}
-		return false;
-	}
-
-	private boolean checkDateRule(Rule rule) {
-		Mergefield mf = findMergefield(rule.getSource().getKey());
-		if (mf == null) {
-			log.error("checkDecimalRule: Unable to find Mergefield for Mergefieldtemplate key : " + rule.getSource().getKey());
-			return false;
-		}
-		if (rule.getDatevalue() != null && mf.getDatevalue() != null) {
-			switch (rule.getOperand()) {
-			case EQUALS:
-				if (rule.getDatevalue().equals(mf.getDatevalue()))
-					return true;
-				break;
-			case NOT_EQUALS:
-				if (!rule.getDatevalue().equals(mf.getDatevalue()))
-					return true;
-				break;
-			case GREATER_THAN:
-				if (mf.getDatevalue().compareTo(rule.getDatevalue()) > 0)
-					return true;
-				break;
-			case LESS_THAN:
-				if (mf.getDatevalue().compareTo(rule.getDatevalue()) < 0)
-					return true;
-				break;
-
-			default:
-				// return true so snippet appears if rule has an invalid operand
-				return true;
-			}
-		} else {
-			// return true so snippet appears if rule value not set
-			return false;
-		}
-		return false;
 	}
 
 	public Matter getCurrentMatter() {

@@ -25,6 +25,7 @@ import org.jboss.logging.Logger;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.vesey.documentable.entity.Document;
 import com.vesey.documentable.entity.Documenttemplate;
+import com.vesey.documentable.entity.Mergefield;
 import com.vesey.documentable.entity.Snippet;
 import com.vesey.documentable.entity.Users;
 import com.vesey.documentable.entity.dto.SnippetDTO;
@@ -37,6 +38,7 @@ import com.vesey.documentable.security.Secured;
 import com.vesey.documentable.session.AuthFacade;
 import com.vesey.documentable.session.DBFacade;
 import com.vesey.documentable.session.DocumentBean;
+import com.vesey.documentable.utils.DocumentUtils;
 import com.vesey.documentable.utils.Utils;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -114,8 +116,8 @@ public class SnippetAPI {
 			log.warn("listSnippets: Documenttemplate does not belong to this organistation.");
 			return Response.status(Status.FORBIDDEN).entity("Documenttemplate does not belong to this organistation.").build();
 		}
-
-		Collection<Snippet> instances = documentBean.getSnippetsForDocument(documentInstance);
+		Collection<Mergefield> mergefields = Mergefield.getForMatter(dbFacade, documentInstance.getMatter().getId());
+		Collection<Snippet> instances = DocumentUtils.getSnippetsForDocument(documentInstance, mapper, mergefields);
 
 		// log.info("listSnippets: Building DTO response...");
 		List<SnippetDTO> dtos = new ArrayList<>();

@@ -10,7 +10,7 @@ import javax.enterprise.context.ApplicationScoped;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-01-22T17:49:26+0000",
+    date = "2023-02-07T15:58:59+0000",
     comments = "version: 1.4.2.Final, compiler: Eclipse JDT (IDE) 1.4.100.v20220318-0906, environment: Java 11.0.9 (Oracle Corporation)"
 )
 @ApplicationScoped
@@ -38,6 +38,18 @@ public class DocumenttemplateMapperImpl extends DocumenttemplateMapper {
         documenttemplateDTO.setCreateddate( entity.getCreateddate() );
         documenttemplateDTO.setCreatedby( usersToUserDTO( entity.getCreatedby(), context ) );
         documenttemplateDTO.setNumbered( entity.isNumbered() );
+        documenttemplateDTO.setHeaderleftcontent( entity.getHeaderleftcontent() );
+        documenttemplateDTO.setHeadercentercontent( entity.getHeadercentercontent() );
+        documenttemplateDTO.setHeaderrightcontent( entity.getHeaderrightcontent() );
+        documenttemplateDTO.setFooterleftcontent( entity.getFooterleftcontent() );
+        documenttemplateDTO.setFootercentercontent( entity.getFootercentercontent() );
+        documenttemplateDTO.setFooterrightcontent( entity.getFooterrightcontent() );
+        documenttemplateDTO.setCovercontent( entity.getCovercontent() );
+        documenttemplateDTO.setIndexcontent( entity.getIndexcontent() );
+        documenttemplateDTO.setHeaderoncoverpage( entity.isHeaderoncoverpage() );
+        documenttemplateDTO.setHeaderoncontentspage( entity.isHeaderoncontentspage() );
+        documenttemplateDTO.setFooteroncoverpage( entity.isFooteroncoverpage() );
+        documenttemplateDTO.setFooteroncontentspage( entity.isFooteroncontentspage() );
 
         return documenttemplateDTO;
     }
@@ -77,6 +89,34 @@ public class DocumenttemplateMapperImpl extends DocumenttemplateMapper {
             entity.setCreateddate( dto.getCreateddate() );
         }
         entity.setNumbered( dto.isNumbered() );
+        if ( dto.getHeaderleftcontent() != null ) {
+            entity.setHeaderleftcontent( dto.getHeaderleftcontent() );
+        }
+        if ( dto.getHeadercentercontent() != null ) {
+            entity.setHeadercentercontent( dto.getHeadercentercontent() );
+        }
+        if ( dto.getHeaderrightcontent() != null ) {
+            entity.setHeaderrightcontent( dto.getHeaderrightcontent() );
+        }
+        if ( dto.getFooterleftcontent() != null ) {
+            entity.setFooterleftcontent( dto.getFooterleftcontent() );
+        }
+        if ( dto.getFootercentercontent() != null ) {
+            entity.setFootercentercontent( dto.getFootercentercontent() );
+        }
+        if ( dto.getFooterrightcontent() != null ) {
+            entity.setFooterrightcontent( dto.getFooterrightcontent() );
+        }
+        if ( dto.getCovercontent() != null ) {
+            entity.setCovercontent( dto.getCovercontent() );
+        }
+        if ( dto.getIndexcontent() != null ) {
+            entity.setIndexcontent( dto.getIndexcontent() );
+        }
+        entity.setHeaderoncoverpage( dto.isHeaderoncoverpage() );
+        entity.setHeaderoncontentspage( dto.isHeaderoncontentspage() );
+        entity.setFooteroncoverpage( dto.isFooteroncoverpage() );
+        entity.setFooteroncontentspage( dto.isFooteroncontentspage() );
 
         return entity;
     }

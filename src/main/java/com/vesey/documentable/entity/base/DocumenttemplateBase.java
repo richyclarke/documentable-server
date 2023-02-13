@@ -1,6 +1,6 @@
 package com.vesey.documentable.entity.base;
 
-// Generated 10 Jan 2023, 13:56:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
+// Generated 24 Jan 2023, 11:06:04 by Hibernate Tools 5.2.13.Final (Modified by RJC)
 
 import java.util.Date;
 import javax.persistence.Column;
@@ -71,6 +71,42 @@ public abstract class DocumenttemplateBase extends BaseEntity implements java.io
 
 	@Column(name = "numbered", nullable = false)
 	protected boolean numbered;
+
+	@Column(name = "headerleftcontent", length = 65535)
+	protected String headerleftcontent;
+
+	@Column(name = "headercentercontent", length = 65535)
+	protected String headercentercontent;
+
+	@Column(name = "headerrightcontent", length = 65535)
+	protected String headerrightcontent;
+
+	@Column(name = "footerleftcontent", length = 65535)
+	protected String footerleftcontent;
+
+	@Column(name = "footercentercontent", length = 65535)
+	protected String footercentercontent;
+
+	@Column(name = "footerrightcontent", length = 65535)
+	protected String footerrightcontent;
+
+	@Column(name = "covercontent", length = 65535)
+	protected String covercontent;
+
+	@Column(name = "indexcontent", length = 65535)
+	protected String indexcontent;
+
+	@Column(name = "headeroncoverpage", nullable = false)
+	protected boolean headeroncoverpage;
+
+	@Column(name = "headeroncontentspage", nullable = false)
+	protected boolean headeroncontentspage;
+
+	@Column(name = "footeroncoverpage", nullable = false)
+	protected boolean footeroncoverpage;
+
+	@Column(name = "footeroncontentspage", nullable = false)
+	protected boolean footeroncontentspage;
 
 	public DocumenttemplateBase() {
 	}
@@ -145,6 +181,102 @@ public abstract class DocumenttemplateBase extends BaseEntity implements java.io
 
 	public void setNumbered(boolean numbered) {
 		this.numbered = numbered;
+	}
+
+	public String getHeaderleftcontent() {
+		return this.headerleftcontent;
+	}
+
+	public void setHeaderleftcontent(String headerleftcontent) {
+		this.headerleftcontent = headerleftcontent;
+	}
+
+	public String getHeadercentercontent() {
+		return this.headercentercontent;
+	}
+
+	public void setHeadercentercontent(String headercentercontent) {
+		this.headercentercontent = headercentercontent;
+	}
+
+	public String getHeaderrightcontent() {
+		return this.headerrightcontent;
+	}
+
+	public void setHeaderrightcontent(String headerrightcontent) {
+		this.headerrightcontent = headerrightcontent;
+	}
+
+	public String getFooterleftcontent() {
+		return this.footerleftcontent;
+	}
+
+	public void setFooterleftcontent(String footerleftcontent) {
+		this.footerleftcontent = footerleftcontent;
+	}
+
+	public String getFootercentercontent() {
+		return this.footercentercontent;
+	}
+
+	public void setFootercentercontent(String footercentercontent) {
+		this.footercentercontent = footercentercontent;
+	}
+
+	public String getFooterrightcontent() {
+		return this.footerrightcontent;
+	}
+
+	public void setFooterrightcontent(String footerrightcontent) {
+		this.footerrightcontent = footerrightcontent;
+	}
+
+	public String getCovercontent() {
+		return this.covercontent;
+	}
+
+	public void setCovercontent(String covercontent) {
+		this.covercontent = covercontent;
+	}
+
+	public String getIndexcontent() {
+		return this.indexcontent;
+	}
+
+	public void setIndexcontent(String indexcontent) {
+		this.indexcontent = indexcontent;
+	}
+
+	public boolean isHeaderoncoverpage() {
+		return this.headeroncoverpage;
+	}
+
+	public void setHeaderoncoverpage(boolean headeroncoverpage) {
+		this.headeroncoverpage = headeroncoverpage;
+	}
+
+	public boolean isHeaderoncontentspage() {
+		return this.headeroncontentspage;
+	}
+
+	public void setHeaderoncontentspage(boolean headeroncontentspage) {
+		this.headeroncontentspage = headeroncontentspage;
+	}
+
+	public boolean isFooteroncoverpage() {
+		return this.footeroncoverpage;
+	}
+
+	public void setFooteroncoverpage(boolean footeroncoverpage) {
+		this.footeroncoverpage = footeroncoverpage;
+	}
+
+	public boolean isFooteroncontentspage() {
+		return this.footeroncontentspage;
+	}
+
+	public void setFooteroncontentspage(boolean footeroncontentspage) {
+		this.footeroncontentspage = footeroncontentspage;
 	}
 
 	public String toString() {

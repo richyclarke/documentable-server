@@ -8,7 +8,7 @@ import javax.enterprise.context.ApplicationScoped;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2023-01-22T17:49:27+0000",
+    date = "2023-02-07T15:58:59+0000",
     comments = "version: 1.4.2.Final, compiler: Eclipse JDT (IDE) 1.4.100.v20220318-0906, environment: Java 11.0.9 (Oracle Corporation)"
 )
 @ApplicationScoped
@@ -34,7 +34,6 @@ public class MergefieldoptionMapperImpl extends MergefieldoptionMapper {
         mergefieldoptionDTO.setVersion( entity.getVersion() );
         mergefieldoptionDTO.setUuid( entity.getUuid() );
         mergefieldoptionDTO.setLabel( entity.getLabel() );
-        mergefieldoptionDTO.setSortorder( entity.getSortorder() );
 
         return mergefieldoptionDTO;
     }
@@ -60,9 +59,6 @@ public class MergefieldoptionMapperImpl extends MergefieldoptionMapper {
         }
         if ( dto.getLabel() != null ) {
             entity.setLabel( dto.getLabel() );
-        }
-        if ( dto.getSortorder() != null ) {
-            entity.setSortorder( dto.getSortorder() );
         }
 
         return entity;

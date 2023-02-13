@@ -2,6 +2,7 @@ package com.vesey.documentable.servlet;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
@@ -70,16 +71,28 @@ public class DownloadServlet extends HttpServlet {
 		String fullPath = null;
 		String mimeType = null;
 
-		String type = request.getParameter("type");
-		if (Utils.isNotEmpty(type)) {
-			switch (type) {
-			case "document":
-				String documentUuid = request.getParameter("d");
-				log.info("processRequest: documentUuid = " + documentUuid);
+		OutputStream outStream = response.getOutputStream();
 
+		String type = request.getParameter("type");
+		log.info("processRequest: type = " + type);
+		if (Utils.isNotEmpty(type)) {
+			String documentUuid = request.getParameter("d");
+			switch (type) {
+			case "html":
+				log.info("processRequest: documentUuid = " + documentUuid);
 				String html = documentBean.generateHTMLPreview(documentUuid);
 				response.setContentType("text/html");
 				response.getWriter().println(html);
+				return;
+			case "documentpdf":
+				log.info("processRequest: documentUuid = " + documentUuid);
+				documentBean.generateDocumentPDF(documentUuid, outStream);
+				response.setContentType("application/pdf");
+				return;
+			case "documenttemplatepdf":
+				log.info("processRequest: documentUuid = " + documentUuid);
+				documentBean.generateDocumenttemplatePDF(documentUuid, outStream);
+				response.setContentType("application/pdf");
 				return;
 
 			default:

@@ -1,5 +1,7 @@
 package com.vesey.documentable.entity.dto;
 
+import javax.validation.constraints.NotNull;
+
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.voodoodyne.jackson.jsog.JSOGGenerator;
@@ -11,10 +13,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MergefieldoptionDTO extends BaseEntityDTO {
 
+	@NotNull
 	private String id; // so we can iterate over this DTO directly in react
+	@NotNull
 	private String label;
+	@NotNull
 	private String key; // for uuid to give a key to all iterations in javascript
-	private Integer sortorder;
+	@NotNull
 	private String mergefieldtemplateUuid;
 
 	public String getLabel() {
@@ -39,14 +44,6 @@ public class MergefieldoptionDTO extends BaseEntityDTO {
 
 	public void setMergefieldtemplateUuid(String mergefieldtemplateUuid) {
 		this.mergefieldtemplateUuid = mergefieldtemplateUuid;
-	}
-
-	public Integer getSortorder() {
-		return sortorder;
-	}
-
-	public void setSortorder(Integer sortorder) {
-		this.sortorder = sortorder;
 	}
 
 	public String getKey() {
